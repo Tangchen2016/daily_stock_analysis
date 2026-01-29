@@ -155,9 +155,26 @@ class StockAnalysisPipeline:
             AnalysisResult 或 None（如果分析失败）
         """
         try:
-            # 获取股票名称（优先从实时行情获取真实名称）
+            # 获取股票名称（多数据源优先级：实时行情 > 历史数据 > 静态映射）
             stock_name = STOCK_NAME_MAP.get(code, '')
-            
+
+            # 尝试从历史数据中提取股票名称（如efinance会返回股票名称）
+            if not stock_name:
+                logger.info(f"[{code}] STOCK_NAME_MAP中未找到，尝试从历史数据提取名称...")
+                try:
+                    df, _ = self.fetcher_manager.get_daily_data(code, days=1)
+                    logger.info(f"[{code}] 历史数据获取结果: df={'有数据' if df is not None and not df.empty else '无数据'}")
+                    if df is not None and not df.empty:
+                        logger.info(f"[{code}] DataFrame列: {df.columns.tolist()}")
+                        # 检查是否有股票名称列（不同数据源列名可能不同）
+                        for name_col in ['股票名称', 'name', 'stock_name', 'Name']:
+                            if name_col in df.columns:
+                                stock_name = str(df[name_col].iloc[0])
+                                logger.info(f"[{code}] ✓ 从历史数据获取股票名称: {stock_name}")
+                                break
+                except Exception as e:
+                    logger.warning(f"[{code}] 从历史数据提取股票名称失败: {e}")
+
             # Step 1: 获取实时行情（量比、换手率等）- 使用统一入口，自动故障切换
             realtime_quote = None
             try:

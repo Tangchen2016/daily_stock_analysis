@@ -398,8 +398,8 @@ class EfinanceFetcher(BaseFetcher):
         if 'code' not in df.columns:
             df['code'] = stock_code
         
-        # 只保留需要的列
-        keep_cols = ['code'] + STANDARD_COLUMNS
+        # 只保留需要的列（额外保留name列用于显示股票名称）
+        keep_cols = ['code', 'name'] + STANDARD_COLUMNS
         existing_cols = [col for col in keep_cols if col in df.columns]
         df = df[existing_cols]
         
