@@ -29,11 +29,14 @@ is_docker = os.path.exists('/.dockerenv') or os.getenv('DOCKER_CONTAINER') == 't
 is_github_actions = os.getenv("GITHUB_ACTIONS") == "true"
 
 if not is_docker and not is_github_actions:
-    # 本地开发环境，如需代理请取消注释或修改端口
+    # 本地开发环境：主动清除系统代理，避免API调用失败
+    # tushare/akshare等数据源不需要代理，代理反而会导致连接失败
+    for proxy_var in ['http_proxy', 'https_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 'all_proxy', 'ALL_PROXY']:
+        os.environ.pop(proxy_var, None)
+
+    # 如需使用代理访问API，请手动取消下面两行的注释并修改端口
     # os.environ["http_proxy"] = "http://127.0.0.1:10809"
     # os.environ["https_proxy"] = "http://127.0.0.1:10809"
-    pass  # 默认禁用代理，避免容器环境错误
-    pass
 
 import argparse
 import logging
