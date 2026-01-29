@@ -668,7 +668,7 @@ def render_config_page(
     function updateButtonState() {
         const code = codeInput.value.trim().toLowerCase();
         const isAStock = /^\\d{6}$/.test(code);           // A股: 600519
-        const isHKStock = /^hk\\d{4,5}$/.test(code);      // 港股: hk9626 或 hk00700
+        const isHKStock = /^(hk)?\\d{4,5}$/.test(code);   // 港股: 9626, 03690, hk9626, hk00700
         submitBtn.disabled = !(isAStock || isHKStock);
     }
     
@@ -850,7 +850,7 @@ def render_config_page(
     window.submitAnalysis = function() {
         const code = codeInput.value.trim().toLowerCase();
         const isAStock = /^\d{6}$/.test(code);
-        const isHKStock = /^hk\d{4,5}$/.test(code);
+        const isHKStock = /^(hk)?\d{4,5}$/.test(code);
 
         if (!(isAStock || isHKStock)) {
             return;
