@@ -510,10 +510,16 @@ class AkshareFetcher(BaseFetcher):
             else:
                 return self._get_stock_realtime_quote_em(stock_code)
     
+    @retry(
+        stop=stop_after_attempt(3),  # 最多重试3次
+        wait=wait_exponential(multiplier=1, min=2, max=30),  # 指数退避：2, 4, 8... 最大30秒
+        retry=retry_if_exception_type((ConnectionError, TimeoutError)),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+    )
     def _get_stock_realtime_quote_em(self, stock_code: str) -> Optional[UnifiedRealtimeQuote]:
         """
         获取普通 A 股实时行情数据（东方财富数据源）
-        
+
         数据来源：ak.stock_zh_a_spot_em()
         优点：数据最全，含量比、换手率、市盈率、市净率、总市值、流通市值等
         缺点：全量拉取，数据量大，容易超时/限流
@@ -521,7 +527,7 @@ class AkshareFetcher(BaseFetcher):
         import akshare as ak
         circuit_breaker = get_realtime_circuit_breaker()
         source_key = "akshare_em"
-        
+
         try:
             # 检查缓存
             current_time = time.time()
@@ -611,19 +617,25 @@ class AkshareFetcher(BaseFetcher):
             circuit_breaker.record_failure(source_key, str(e))
             return None
     
+    @retry(
+        stop=stop_after_attempt(3),  # 最多重试3次
+        wait=wait_exponential(multiplier=1, min=2, max=30),  # 指数退避：2, 4, 8... 最大30秒
+        retry=retry_if_exception_type((ConnectionError, TimeoutError)),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+    )
     def _get_stock_realtime_quote_sina(self, stock_code: str) -> Optional[UnifiedRealtimeQuote]:
         """
         获取普通 A 股实时行情数据（新浪财经数据源）
-        
+
         数据来源：新浪财经接口（直连，单股票查询）
         优点：单股票查询，负载小，速度快
         缺点：数据字段较少，无量比/PE/PB等
-        
+
         接口格式：http://hq.sinajs.cn/list=sh600519,sz000001
         """
         circuit_breaker = get_realtime_circuit_breaker()
         source_key = "akshare_sina"
-        
+
         try:
             import requests
             
@@ -709,19 +721,25 @@ class AkshareFetcher(BaseFetcher):
             circuit_breaker.record_failure(source_key, str(e))
             return None
     
+    @retry(
+        stop=stop_after_attempt(3),  # 最多重试3次
+        wait=wait_exponential(multiplier=1, min=2, max=30),  # 指数退避：2, 4, 8... 最大30秒
+        retry=retry_if_exception_type((ConnectionError, TimeoutError)),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+    )
     def _get_stock_realtime_quote_tencent(self, stock_code: str) -> Optional[UnifiedRealtimeQuote]:
         """
         获取普通 A 股实时行情数据（腾讯财经数据源）
-        
+
         数据来源：腾讯财经接口（直连，单股票查询）
         优点：单股票查询，负载小，包含换手率
         缺点：无量比/PE/PB等估值数据
-        
+
         接口格式：http://qt.gtimg.cn/q=sh600519,sz000001
         """
         circuit_breaker = get_realtime_circuit_breaker()
         source_key = "tencent"
-        
+
         try:
             import requests
             
@@ -800,23 +818,29 @@ class AkshareFetcher(BaseFetcher):
             circuit_breaker.record_failure(source_key, str(e))
             return None
     
+    @retry(
+        stop=stop_after_attempt(3),  # 最多重试3次
+        wait=wait_exponential(multiplier=1, min=2, max=30),  # 指数退避：2, 4, 8... 最大30秒
+        retry=retry_if_exception_type((ConnectionError, TimeoutError)),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+    )
     def _get_etf_realtime_quote(self, stock_code: str) -> Optional[UnifiedRealtimeQuote]:
         """
         获取 ETF 基金实时行情数据
-        
+
         数据来源：ak.fund_etf_spot_em()
         包含：最新价、涨跌幅、成交量、成交额、换手率等
-        
+
         Args:
             stock_code: ETF 代码
-            
+
         Returns:
             UnifiedRealtimeQuote 对象，获取失败返回 None
         """
         import akshare as ak
         circuit_breaker = get_realtime_circuit_breaker()
         source_key = "akshare_etf"
-        
+
         try:
             # 检查缓存
             current_time = time.time()
@@ -899,23 +923,29 @@ class AkshareFetcher(BaseFetcher):
             circuit_breaker.record_failure(source_key, str(e))
             return None
     
+    @retry(
+        stop=stop_after_attempt(3),  # 最多重试3次
+        wait=wait_exponential(multiplier=1, min=2, max=30),  # 指数退避：2, 4, 8... 最大30秒
+        retry=retry_if_exception_type((ConnectionError, TimeoutError)),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+    )
     def _get_hk_realtime_quote(self, stock_code: str) -> Optional[UnifiedRealtimeQuote]:
         """
         获取港股实时行情数据
-        
+
         数据来源：ak.stock_hk_spot_em()
         包含：最新价、涨跌幅、成交量、成交额等
-        
+
         Args:
             stock_code: 港股代码
-            
+
         Returns:
             UnifiedRealtimeQuote 对象，获取失败返回 None
         """
         import akshare as ak
         circuit_breaker = get_realtime_circuit_breaker()
         source_key = "akshare_hk"
-        
+
         try:
             # 防封禁策略
             self._set_random_user_agent()
